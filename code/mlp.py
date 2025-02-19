@@ -12,8 +12,8 @@ from tensorflow.keras.metrics import CategoricalAccuracy
 import keras_tuner as kt
 import matplotlib.pyplot as plt
 
-from callback_metrics import Metrics
-from evaluation_report import EvaluationMetrics
+from evaluation_utils import (Metrics, EvaluationReport)
+
 
 SEED = 2025
 
@@ -135,7 +135,7 @@ class MLP:
         y_probabilities = self.model.predict(data_X)
         y_predicted = np.argmax(y_probabilities.copy(), -1)
 
-        return EvaluationMetrics.classification_report(
+        return EvaluationReport.classification_report(
             y_true, y_probabilities, y_predicted,
             self.class_ids, self.class_labels)
 
