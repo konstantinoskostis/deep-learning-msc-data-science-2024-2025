@@ -12,3 +12,5 @@ FASHION_MNIST_CLASS_LABELS = [
 ]
 FASHION_MNIST_TUNER_PROJECT_NAME = 'fashion_mninst_mlp'
 FASHION_MNIST_WEIGHTS = 'fashion_mnist_mlp.weights.h5'
+
+SEED = 2025
