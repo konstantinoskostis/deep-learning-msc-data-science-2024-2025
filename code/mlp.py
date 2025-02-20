@@ -13,9 +13,8 @@ import keras_tuner as kt
 import matplotlib.pyplot as plt
 
 from evaluation_utils import (Metrics, EvaluationReport)
+from constants import SEED
 
-
-SEED = 2025
 
 class MLPTuner:
     def __init__(self,
@@ -28,10 +27,11 @@ class MLPTuner:
         self.max_layers = max_layers
         self.use_dropout = use_dropout
 
-        X_rem, X_train, y_rem, y_train = train_test_split(train_dataset[0].copy(), train_dataset[1].copy(),
-                                                          stratify=train_dataset[1].copy(),
-                                                          test_size=self.train_size,
-                                                          random_state=self.seed)
+        X_rem, X_train, y_rem, y_train = train_test_split(
+            train_dataset[0].copy(), train_dataset[1].copy(),
+            stratify=train_dataset[1].copy(),
+            test_size=self.train_size,
+            random_state=self.seed)
 
         self.val_X, self.val_y = validation_dataset
         self.train_X = X_train
@@ -39,8 +39,9 @@ class MLPTuner:
 
     def tune(self, max_trials=10, epochs=30, batch_size=128, patience=5):
         tuner = kt.RandomSearch(self.build_model,
-                                objective=kt.Objective("val_loss", direction="min"),
-                                max_trials = max_trials,
+                                objective=kt.Objective(
+                                    "val_loss", direction="min"),
+                                max_trials=max_trials,
                                 seed=self.seed,
                                 directory=self.tuner_directory,
                                 project_name=self.project_name)
@@ -49,7 +50,7 @@ class MLPTuner:
 
         tuner.search(self.train_X, self.train_y,
                      validation_data=(self.val_X, self.val_y),
-                     epochs=epochs, batch_size = batch_size,
+                     epochs=epochs, batch_size=batch_size,
                      callbacks=[early_stopping])
 
         return tuner
@@ -57,17 +58,22 @@ class MLPTuner:
     def build_model(self, hp):
         model = Sequential()
 
-        num_layers = hp.Int(name='num_layers', min_value=1, max_value=self.max_layers)
+        num_layers = hp.Int(name='num_layers', min_value=1,
+                            max_value=self.max_layers)
 
         for i in range(num_layers):
-            units = hp.Int(name=f'hidden_units_{i}', min_value=64, max_value=256, step=64)
-            activation = hp.Choice(name=f'activation_layer_{i}', values=['relu', 'tanh'])
+            units = hp.Int(
+                name=f'hidden_units_{i}', min_value=64, max_value=256, step=64)
+            activation = hp.Choice(
+                name=f'activation_layer_{i}', values=['relu', 'tanh'])
 
             if self.use_dropout:
-                dropout_rate = hp.Choice(name=f'dropout_layer_{i}', values=[0.1, 0.2, 0.3, 0.4, 0.5])
+                dropout_rate = hp.Choice(name=f'dropout_layer_{i}', values=[
+                                         0.1, 0.2, 0.3, 0.4, 0.5])
 
             if i == 0:
-                model.add(Dense(units, activation=activation, input_dim=self.train_X.shape[1]))
+                model.add(Dense(units, activation=activation,
+                          input_dim=self.train_X.shape[1]))
             else:
                 model.add(Dense(units, activation=activation))
 
@@ -78,12 +84,14 @@ class MLPTuner:
         model.add(Dense(self.train_y.shape[1], activation='softmax'))
 
         # Optimizer tuning
-        hp_learning_rate = hp.Choice('learning_rate', values=[1e-2, 1e-3, 1e-4])
+        hp_learning_rate = hp.Choice(
+            'learning_rate', values=[1e-2, 1e-3, 1e-4])
         model.compile(loss='categorical_crossentropy',
-                    optimizer=Adam(learning_rate=hp_learning_rate),
-                    metrics=[CategoricalAccuracy()])
+                      optimizer=Adam(learning_rate=hp_learning_rate),
+                      metrics=[CategoricalAccuracy()])
 
         return model
+
 
 class MLP:
 
@@ -144,32 +152,40 @@ class MLP:
 
         self.model = Sequential()
 
-        num_layers = hyperparams.get('num_layers', 1)  # Default to 1 layer if missing
+        # Default to 1 layer if missing
+        num_layers = hyperparams.get('num_layers', 1)
 
         for i in range(num_layers):
-            hidden_units = hyperparams.get(f'hidden_units_{i}', 64)  # Default to 64 neurons
-            activation = hyperparams.get(f'activation_layer{i}', 'relu')  # Default activation: ReLU
-            dropout_proba = hyperparams.get(f'dropout_layer_{i}', None)  # Default dropout: None
+            hidden_units = hyperparams.get(
+                f'hidden_units_{i}', 64)  # Default to 64 neurons
+            # Default activation: ReLU
+            activation = hyperparams.get(f'activation_layer{i}', 'relu')
+            dropout_proba = hyperparams.get(
+                f'dropout_layer_{i}', None)  # Default dropout: None
 
             # Add first layer with input_dim specified
             if i == 0:
                 self.model.add(Dense(hidden_units, input_dim=input_dim, activation=activation,
                                      name=f'hidden_units_{i}'))
             else:
-                self.model.add(Dense(hidden_units, activation=activation, name=f'hidden_units_{i}'))
+                self.model.add(
+                    Dense(hidden_units, activation=activation, name=f'hidden_units_{i}'))
 
             if dropout_proba is not None:
                 # Add dropout layer
-                self.model.add(Dropout(dropout_proba, name=f'dropout_layer_{i}'))
+                self.model.add(
+                    Dropout(dropout_proba, name=f'dropout_layer_{i}'))
 
         # Output layer (Softmax for multi-class classification)
-        self.model.add(Dense(output_dim, activation='softmax', name='output_layer'))
+        self.model.add(
+            Dense(output_dim, activation='softmax', name='output_layer'))
 
         # Compile model with Adam optimizer
-        learning_rate = hyperparams.get('learning_rate', 0.001)  # Default learning rate: 0.001
+        # Default learning rate: 0.001
+        learning_rate = hyperparams.get('learning_rate', 0.001)
         self.model.compile(loss='categorical_crossentropy',
-                        optimizer=Adam(learning_rate=learning_rate),
-                        metrics=[CategoricalAccuracy()])
+                           optimizer=Adam(learning_rate=learning_rate),
+                           metrics=[CategoricalAccuracy()])
 
     def plot_curves(self):
         fig, axs = plt.subplots(1, 2, figsize=(12, 6))
@@ -181,7 +197,8 @@ class MLP:
         axs[0].set_ylabel('accuracy')
         axs[0].set_xlabel('epoch')
         axs[0].legend(['train', 'dev'], loc='upper left')
-        axs[0].set_xticks(range(1,len(self.history.history['categorical_accuracy']) + 1, 4))
+        axs[0].set_xticks(
+            range(1, len(self.history.history['categorical_accuracy']) + 1, 4))
 
         # summarize history for loss
         axs[1].plot(self.history.history['loss'])
@@ -190,7 +207,7 @@ class MLP:
         axs[1].set_ylabel('loss')
         axs[1].set_xlabel('epoch')
         axs[1].legend(['train', 'dev'], loc='upper right')
-        axs[1].set_xticks(range(1,len(self.history.history['loss']) + 1, 4))
+        axs[1].set_xticks(range(1, len(self.history.history['loss']) + 1, 4))
 
         # space between the plots
         plt.tight_layout()
