@@ -14,7 +14,9 @@ FASHION_MNIST_CLASS_LABELS = [
     'Dress', 'Coat', 'Sandal', 'Shirt',
     'Sneaker', 'Bag', 'Ankle boot'
 ]
-FASHION_MNIST_TUNER_PROJECT_NAME = 'fashion_mninst_mlp'
-FASHION_MNIST_WEIGHTS = 'fashion_mnist_mlp.weights.h5'
+FASHION_MNIST_MLP_TUNER_PROJECT_NAME = 'fashion_mninst_mlp'
+FASHION_MNIST_MLP_WEIGHTS = 'fashion_mnist_mlp.weights.h5'
+FASHION_MNIST_CNN_TUNER_PROJECT_NAME = 'fashion_mninst_cnn'
+FASHION_MNIST_CNN_WEIGHTS = 'fashion_mnist_cnn.weights.h5'
 
 SEED = 2025
