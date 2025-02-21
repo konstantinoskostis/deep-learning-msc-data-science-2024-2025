@@ -33,7 +33,7 @@ class Conv2DBlock(Layer):
         self.convolution = Conv2D(filters=filters, kernel_size=self.kernel_size,
                                   activation=self.activation, padding=self.padding)
 
-        if self.max_pooling is not None:
+        if self.max_pooling_size is not None:
             self.pooling = MaxPooling2D(
                 pool_size=self.max_pooling_size, strides=self.strides)
 
@@ -95,7 +95,7 @@ class CNNTuner:
         model = Sequential()
 
         # Add a simple convolutional layer with input dimensions
-        kernel = hp.choice(name='kernel', values=[3, 5, 7])
+        kernel = hp.Choice(name='kernel', values=[3, 5, 7])
         conv = Conv2D(
             filters=hp.Int('conv_filters', min_value=32,
                            max_value=128, step=32),
@@ -111,12 +111,12 @@ class CNNTuner:
                             max_value=self.max_conv2d_blocks)
 
         for i in range(num_layers):
-            layer_kernel = hp.choice(
+            layer_kernel = hp.Choice(
                 name='layer_{}_kernel'.format(i), values=[3, 5, 7])
 
-            layer_pool_size = hp.choice(
+            layer_pool_size = hp.Choice(
                 name='layer_{}_pool_size'.format(i), values=[2, 3])
-            layer_pool_strides = hp.choice(
+            layer_pool_strides = hp.Choice(
                 name='layer_{}_pool_strides'.format(i), values=[1, 2])
 
             layer_dropout_rate = 0.0
