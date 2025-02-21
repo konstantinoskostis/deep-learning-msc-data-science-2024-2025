@@ -5,7 +5,8 @@ import os
 import numpy as np
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Layer, Conv2D, MaxPooling2D, Dropout
+from tensorflow.keras.layers import (
+    Layer, Conv2D, MaxPooling2D, Dropout, Flatten, Dense)
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.metrics import CategoricalAccuracy
@@ -18,7 +19,7 @@ from constants import SEED
 
 class Conv2DBlock(Layer):
     def __init__(self, filters, kernel_size=(3, 3), activation='relu', padding='same',
-                 max_pooling_size=(2, 2), dropout_rate=0.1):
+                 max_pooling_size=(2, 2), strides=1, dropout_rate=0.1):
         super().__init__()
 
         self.filters = filters
@@ -26,13 +27,15 @@ class Conv2DBlock(Layer):
         self.activation = activation
         self.padding = padding
         self.max_pooling_size = max_pooling_size
+        self.strides = strides
         self.dropout_rate = dropout_rate
 
         self.convolution = Conv2D(filters=filters, kernel_size=self.kernel_size,
                                   activation=self.activation, padding=self.padding)
 
         if self.max_pooling is not None:
-            self.pooling = MaxPooling2D(self.max_pooling_size)
+            self.pooling = MaxPooling2D(
+                pool_size=self.max_pooling_size, strides=self.strides)
 
         if self.dropout_rate is not None:
             self.dropout = Dropout(self.dropout_rate)
@@ -97,13 +100,13 @@ class CNNTuner:
             filters=hp.Int('conv_filters', min_value=32,
                            max_value=128, step=32),
             kernel_size=(kernel, kernel),
-            activation=hp.Choice("activation", ["relu", "tanh"]),
+            activation=hp.Choice("conv_activation", ["relu", "tanh"]),
             padding='same',
             input_shape=self.train_X.shape[1:])
 
         model.add(conv)
 
-        # Add a number of custom Conv2DBlock objects
+        # Stack a number of custom Conv2DBlock objects
         num_layers = hp.Int(name='num_layers', min_value=1,
                             max_value=self.max_conv2d_blocks)
 
@@ -111,15 +114,47 @@ class CNNTuner:
             layer_kernel = hp.choice(
                 name='layer_{}_kernel'.format(i), values=[3, 5, 7])
 
+            layer_pool_size = hp.choice(
+                name='layer_{}_pool_size'.format(i), values=[2, 3])
+            layer_pool_strides = hp.choice(
+                name='layer_{}_pool_strides'.format(i), values=[1, 2])
+
+            layer_dropout_rate = 0.0
+
+            if self.use_dropout:
+                layer_dropout_rate = hp.Float(
+                    'layer_{}_dropout'.format(i),
+                    0.1, 0.5, step=0.05)
+
             conv_block = Conv2DBlock(
                 filters=hp.Int('conv2dblock_{}_filters'.format(i),
                                min_value=32, max_value=128, step=32),
-                kernel_size=(layer_kernel, layer_kernel)
+                kernel_size=(layer_kernel, layer_kernel),
+                activation=hp.Choice(
+                    name="conv2dblock_{}_activation", values=["relu", "tanh"]),
+                padding='same',
+                max_pooling_size=(layer_pool_size, layer_pool_size),
+                strides=layer_pool_strides,
+                dropout_rate=layer_dropout_rate
             )
             model.add(conv_block)
 
         # Add a flattening Layer
+        model.add(Flatten())
 
         # Add an MLP (for classification) layer
+        model.add(Dense(
+            units=hp.Int('dense_units', min_value=64, max_value=256, step=64),
+            activation='relu')
+        )
+        model.add(Dropout(hp.Float('dense_dropout', 0.1, 0.5, step=0.1)))
+        model.add(Dense(self.train_y.shape[1], activation='softmax'))
+
+        # Optimizer tuning
+        hp_learning_rate = hp.Choice(
+            'learning_rate', values=[1e-2, 1e-3, 1e-4])
+        model.compile(loss='categorical_crossentropy',
+                      optimizer=Adam(learning_rate=hp_learning_rate),
+                      metrics=[CategoricalAccuracy()])
 
         return model
