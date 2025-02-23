@@ -4,7 +4,7 @@ from constants import (FASHION_MNIST_TRAIN_IMAGES_URL, FASHION_MNIST_TRAIN_LABEL
                        FASHION_MNIST_TEST_IMAGES_URL, FASHION_MNIST_TEST_LABELS_URL)
 
 
-class FashioMNISTDownloader:
+class FashionMNISTDownloader:
     def __init__(self, download_directory):
         self.download_directory = download_directory
 

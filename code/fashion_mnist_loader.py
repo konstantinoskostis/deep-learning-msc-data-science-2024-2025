@@ -10,7 +10,7 @@ from tensorflow.keras.utils import to_categorical
 SEED = 2025
 
 
-class FashionMnistLoader:
+class FashionMNISTLoader:
     """A data loader class for the Fashion MNIST dataset"""
 
     def __init__(self, path, kind, seed=SEED):
@@ -64,15 +64,15 @@ class FashionMnistLoader:
             flatten_shape (boolean, optional): Whether or not to reshape an image as a vector or not
         """
         labels_path = os.path.join(path,
-                                    '%s-labels-idx1-ubyte.gz'
-                                    % kind)
+                                   '%s-labels-idx1-ubyte.gz'
+                                   % kind)
         images_path = os.path.join(path,
-                                    '%s-images-idx3-ubyte.gz'
-                                    % kind)
+                                   '%s-images-idx3-ubyte.gz'
+                                   % kind)
 
         with gzip.open(labels_path, 'rb') as lbpath:
             labels = np.frombuffer(lbpath.read(), dtype=np.uint8,
-                                    offset=8)
+                                   offset=8)
 
             if as_categorical is True:
                 unique = np.unique(labels)
