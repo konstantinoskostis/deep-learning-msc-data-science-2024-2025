@@ -12,14 +12,14 @@ class FashionMNISTDownloader:
         if not os.path.isdir(self.download_directory):
             os.makedirs(self.download_directory, exist_ok=True)
 
-        self.download_file(self.download_directory,
-                           FASHION_MNIST_TRAIN_IMAGES_URL)
-        self.download_file(self.download_directory,
-                           FASHION_MNIST_TRAIN_LABELS_URL)
-        self.download_file(self.download_directory,
-                           FASHION_MNIST_TEST_IMAGES_URL)
-        self.download_file(self.download_directory,
-                           FASHION_MNIST_TEST_LABELS_URL)
+            self.download_file(self.download_directory,
+                               FASHION_MNIST_TRAIN_IMAGES_URL)
+            self.download_file(self.download_directory,
+                               FASHION_MNIST_TRAIN_LABELS_URL)
+            self.download_file(self.download_directory,
+                               FASHION_MNIST_TEST_IMAGES_URL)
+            self.download_file(self.download_directory,
+                               FASHION_MNIST_TEST_LABELS_URL)
 
         return
 
