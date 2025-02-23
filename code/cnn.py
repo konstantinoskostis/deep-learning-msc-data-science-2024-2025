@@ -235,7 +235,7 @@ class CNN:
             strides=(kernel_stride, kernel_stride),
             activation=hyperparams.get('conv_activation', 'relu'),
             padding='same',
-            input_shape=self.train_X.shape[1:])
+            input_shape=input_dim)
 
         self.model.add(conv)
 
@@ -276,7 +276,7 @@ class CNN:
         self.model.add(
             Dropout(hyperparams.get('dense_dropout', 0.1))
         )
-        self.model.add(Dense(self.train_y.shape[1], activation='softmax'))
+        self.model.add(Dense(output_dim, activation='softmax'))
 
         # Optimizer tuning
         learning_rate = hyperparams.get('learning_rate', 1e-3)
