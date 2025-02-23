@@ -17,16 +17,10 @@ for the year 2024-2025
 
 ## Repository Structure
 
-- data
-  - fashion_mnist
-    - train-images-idx3-ubyte.gz
-    - train-labels-idx1-ubyte.gz
-    - t10k-images-idx3-ubyte.gz
-    - t10k-labels-idx1-ubyte.gz
-  - cifar_10
-    - cifar-10-python.tar.gz
 - code
-  - contains reusable classes an utility methods
+  - contains reusable classes, modules and utility methods for the entire project
 - notebooks
-  - part-1-image-classification-fashion-mnist.ipynb
-  - part-1-image-classification-cifar-10.ipynb
+  - part_1_image_classification_fashion_mnist_mlp.ipynb
+  - part_1_image_classification_fashion_mnist_cnn.ipynb
+  - part_1_image_classification_cifar_10_mlp.ipynb
+  - part_1_image_classification_cifar_10_cnn.ipynb
