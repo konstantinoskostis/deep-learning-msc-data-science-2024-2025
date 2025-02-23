@@ -19,4 +19,15 @@ FASHION_MNIST_MLP_WEIGHTS = 'fashion_mnist_mlp.weights.h5'
 FASHION_MNIST_CNN_TUNER_PROJECT_NAME = 'fashion_mninst_cnn'
 FASHION_MNIST_CNN_WEIGHTS = 'fashion_mnist_cnn.weights.h5'
 
+CIFAR_10_CLASS_IDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+CIFAR_10_CLASS_LABELS = [
+    'airplane', 'automobile', 'bird',
+    'cat', 'deer', 'dog', 'frog',
+    'horse', 'ship', 'truck'
+]
+CIFAR_10_MLP_TUNER_PROJECT_NAME = 'cifar_10_mlp'
+CIFAR_10_MLP_WEIGHTS = 'cifar_10_mlp.weights.h5'
+CIFAR_10_CNN_TUNER_PROJECT_NAME = 'cifar_10_cnn'
+CIFAR_10_CNN_WEIGHTS = 'cifar_10_cnn.weights.h5'
+
 SEED = 2025
