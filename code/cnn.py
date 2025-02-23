@@ -186,7 +186,7 @@ class CNN:
         X_train, y_train = train_dataset
         X_val, y_val = validation_dataset
 
-        self.build_model(hyperparams, X_train.shape[-1], y_train.shape[-1])
+        self.build_model(hyperparams, X_train.shape[1:], y_train.shape[-1])
 
         if not os.path.exists(self.models_dir):
             os.makedirs(self.models_dir)
