@@ -4,6 +4,7 @@ import os
 
 import numpy as np
 from sklearn.model_selection import train_test_split
+import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import (
     Layer, Conv2D, MaxPooling2D, Dropout, Flatten, Dense)
@@ -15,6 +16,9 @@ import matplotlib.pyplot as plt
 
 from evaluation_utils import (Metrics, EvaluationReport)
 from constants import SEED
+
+# Set tensorflow random seed for reproducibility
+tf.random.set_seed(SEED)
 
 
 class Conv2DBlock(Layer):
