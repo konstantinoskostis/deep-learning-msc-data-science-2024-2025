@@ -38,7 +38,7 @@ class FashionMNISTLoader:
             Tuple: Either in format (X, y) when validation_size is 0 or
                    in format ((X, y), (val_X, val_y)) when validation_size is > 0
         """
-        loaded_data, loaded_labels = FashionMnistLoader.load(
+        loaded_data, loaded_labels = FashionMNISTLoader.load(
             self.path,
             kind=self.kind, normalize=normalize,
             as_categorical=as_categorical, flatten_shape=flatten_shape)
