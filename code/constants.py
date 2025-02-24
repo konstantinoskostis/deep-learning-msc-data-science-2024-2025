@@ -1,5 +1,7 @@
 """A set of constants as sane defaults"""
 
+import os
+
 TUNERS_DIR = 'tuners'
 MODELS_DIR = 'models'
 
@@ -31,6 +33,14 @@ CIFAR_10_CNN_TUNER_PROJECT_NAME = 'cifar_10_cnn'
 CIFAR_10_CNN_WEIGHTS = 'cifar_10_cnn.weights.h5'
 
 ESC_50_URL = 'https://github.com/karoldvl/ESC-50/archive/master.zip'
+ESC_50_DATA_PATH = 'data/esc_50'
+ESC_50_MASTER_ZIP = 'master.zip'
+ESC_50_MASTER_UNZIPPED = 'ESC-50-master'
+ESC_50_AUDIO_PATH = os.path.join(
+    ESC_50_DATA_PATH, ESC_50_MASTER_UNZIPPED, 'audio')
+ESC_50_META_CSV_PATH = os.path.join(
+    ESC_50_DATA_PATH, ESC_50_MASTER_UNZIPPED, 'meta', 'esc50.csv')
+
 AUDIO_CUSTOM_CNN_TUNER_PROJECT_NAME = 'audio_custom_cnn'
 AUDIO_CUSTOM_RNN_TUNER_PROJECT_NAME = 'audio_custom_rnn'
 AUDIO_CUSTOM_MLP_TUNER_PROJECT_NAME = 'audio_custom_mlp'
