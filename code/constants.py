@@ -30,4 +30,9 @@ CIFAR_10_MLP_WEIGHTS = 'cifar_10_mlp.weights.h5'
 CIFAR_10_CNN_TUNER_PROJECT_NAME = 'cifar_10_cnn'
 CIFAR_10_CNN_WEIGHTS = 'cifar_10_cnn.weights.h5'
 
+ESC_50_URL = 'https://github.com/karoldvl/ESC-50/archive/master.zip'
+AUDIO_CUSTOM_CNN_TUNER_PROJECT_NAME = 'audio_custom_cnn'
+AUDIO_CUSTOM_RNN_TUNER_PROJECT_NAME = 'audio_custom_rnn'
+AUDIO_CUSTOM_MLP_TUNER_PROJECT_NAME = 'audio_custom_mlp'
+
 SEED = 2025
