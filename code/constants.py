@@ -41,6 +41,15 @@ ESC_50_AUDIO_PATH = os.path.join(
 ESC_50_META_CSV_PATH = os.path.join(
     ESC_50_DATA_PATH, ESC_50_MASTER_UNZIPPED, 'meta', 'esc50.csv')
 
+# Related to the audio processing of ESC-50 dataset
+
+# AudioBERT/HuBERT/YAMNet use this sampling rate
+SAMPLE_RATE = 16_000
+DURATION = 5
+N_MFCC = 40
+N_MELS = 128
+HOP_LENGTH = 512
+
 AUDIO_CUSTOM_CNN_TUNER_PROJECT_NAME = 'audio_custom_cnn'
 AUDIO_CUSTOM_RNN_TUNER_PROJECT_NAME = 'audio_custom_rnn'
 AUDIO_CUSTOM_MLP_TUNER_PROJECT_NAME = 'audio_custom_mlp'
