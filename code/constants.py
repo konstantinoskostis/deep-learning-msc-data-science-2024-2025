@@ -36,10 +36,8 @@ ESC_50_URL = 'https://github.com/karoldvl/ESC-50/archive/master.zip'
 ESC_50_DATA_PATH = 'data/esc_50'
 ESC_50_MASTER_ZIP = 'master.zip'
 ESC_50_MASTER_UNZIPPED = 'ESC-50-master'
-ESC_50_AUDIO_PATH = os.path.join(
-    ESC_50_DATA_PATH, ESC_50_MASTER_UNZIPPED, 'audio')
-ESC_50_META_CSV_PATH = os.path.join(
-    ESC_50_DATA_PATH, ESC_50_MASTER_UNZIPPED, 'meta', 'esc50.csv')
+ESC_50_AUDIO_PATH = 'audio'
+ESC_50_META_CSV_PATH = 'meta/esc50.csv'
 
 # Related to the audio processing of ESC-50 dataset
 
