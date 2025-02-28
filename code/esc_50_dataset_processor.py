@@ -3,6 +3,7 @@ import numpy as np
 
 from constants import SAMPLE_RATE, DURATION, N_MELS, N_MFCC, HOP_LENGTH
 
+
 class ESC50DatasetProcessor:
     """Performs feature extraction on a given ESC-50 data slice"""
 
@@ -18,7 +19,7 @@ class ESC50DatasetProcessor:
     def process(self, dataset):
         """Process a ESC-50 dataset slice by extracting audio features"""
 
-        for i, row in dataset.df.rows():
+        for i, row in dataset.df.iterrows():
             audio_features = self.extract_features(row['audio_path'])
             dataset.append_audio_features(*audio_features)
 
