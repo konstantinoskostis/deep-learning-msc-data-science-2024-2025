@@ -1,8 +1,10 @@
 import numpy as np
+from tensorflow.keras.utils import to_categorical
+
 
 class ESC50Dataset:
     def __init__(self, df):
-        self.df  = df
+        self.df = df
 
         self.X_mel = []
         self.X_mfcc = []
@@ -40,7 +42,7 @@ class ESC50Dataset:
 
         return
 
-    def to_numpy(self):
+    def to_numpy(self, one_hot_labels=True):
         # Add channel dimension for CN, to spectrograms
         self.X_mel_np = np.array(self.X_mel)[..., np.newaxis]
 
@@ -48,5 +50,9 @@ class ESC50Dataset:
         self.X_mfcc_np = np.array(self.X_mfcc).transpose(0, 2, 1)
 
         self.y_np = np.array(self.y)
+
+        if one_hot_labels is True:
+            self.y_np = to_categorical(
+                self.y_np, num_classes=len(self.class_ids))
 
         return self
