@@ -17,9 +17,6 @@ class ESC50Loader:
         metadata_df = pd.read_csv(metadata_path, usecols=[
                                   'filename', 'fold', 'target', 'category'])
 
-        # subtract 1 from target so the class ids start from 0
-        metadata_df['target'] = metadata_df['target'] - 1
-
         train_df = metadata_df[metadata_df['fold'].isin([1, 2, 3])]
         val_df = metadata_df[metadata_df['fold'] == 4]
         test_df = metadata_df[metadata_df['fold'] == 5]
