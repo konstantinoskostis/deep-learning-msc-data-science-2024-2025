@@ -39,10 +39,17 @@ ESC_50_MASTER_UNZIPPED = 'ESC-50-master'
 ESC_50_AUDIO_PATH = 'audio'
 ESC_50_META_CSV_PATH = 'meta/esc50.csv'
 
+POS_TAG_TRAIN_URL = 'https://raw.githubusercontent.com/UniversalDependencies/UD_English-GUM/master/en_gum-ud-train.conllu'
+POS_TAG_DEV_URL = 'https://raw.githubusercontent.com/UniversalDependencies/UD_English-GUM/master/en_gum-ud-dev.conllu'
+POS_TAG_TEST_URL = 'https://raw.githubusercontent.com/UniversalDependencies/UD_English-GUM/master/en_gum-ud-test.conllu'
+POS_TAG_CUSTOM_TUNER_PROJECT_NAME = 'pos_tag_custom'
+POS_TAG_CUSTOM_WEIGHTS = 'pos_tag_custom.weights.h5'
+POS_TAG_PRETRAINED_WEIGHTS = 'pos_tag_pretrained.weights.h5'
+
 # Related to the audio processing of ESC-50 dataset
 
 # AudioBERT/HuBERT/YAMNet use this sampling rate
-SAMPLE_RATE = 16_000
+SAMPLE_RATE = 44100
 DURATION = 5
 N_MFCC = 40
 N_MELS = 128
