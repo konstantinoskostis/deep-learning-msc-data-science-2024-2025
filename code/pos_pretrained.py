@@ -325,19 +325,19 @@ class Trainer:
         fig, axs = plt.subplots(1, 2, figsize=(12, 6))
 
         # summarize history for accuracy
-        axs[0].plot(self.history.history['sparse_categorical_accuracy'])
-        axs[0].plot(self.history.history['val_sparse_categorical_accuracy'])
-        axs[0].set_title('Model Accuracy (Sparse Categorical Accuracy)')
+        axs[0].plot(self.history.history['masked_accuracy'])
+        axs[0].plot(self.history.history['val_masked_accuracy'])
+        axs[0].set_title('Model Accuracy (Masked Accuracy)')
         axs[0].set_ylabel('accuracy')
         axs[0].set_xlabel('epoch')
         axs[0].legend(['train', 'dev'], loc='upper left')
         axs[0].set_xticks(
-            range(1, len(self.history.history['sparse_categorical_accuracy'])+1, 4))
+            range(1, len(self.history.history['masked_accuracy'])+1, 4))
 
         # summarize history for loss
         axs[1].plot(self.history.history['loss'])
         axs[1].plot(self.history.history['val_loss'])
-        axs[1].set_title('Model Loss (Sparse Categorical Cross-Entropy)')
+        axs[1].set_title('Model Loss (Sparse Categorical Cross-Entropy [Masked])')
         axs[1].set_ylabel('loss')
         axs[1].set_xlabel('epoch')
         axs[1].legend(['train', 'dev'], loc='upper right')
