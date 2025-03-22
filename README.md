@@ -14,6 +14,7 @@ for the year 2024-2025
 ## Datasets
 - [Fashion MNIST](https://github.com/zalandoresearch/fashion-mnist)
 - [CIFAR-10](https://www.cs.toronto.edu/%7Ekriz/cifar.html)
+- [GUM Universal Dependencies TreeBanks - EN](https://github.com/UniversalDependencies/UD_English-GUM/tree/master)
 
 ## Repository Structure
 
@@ -24,3 +25,5 @@ for the year 2024-2025
   - part_1_image_classification_fashion_mnist_cnn.ipynb
   - part_1_image_classification_cifar_10_mlp.ipynb
   - part_1_image_classification_cifar_10_cnn.ipynb
+  - part_2_pos_tagging_custom.ipynb
+  - part_2_pos_tagging_pretrained.ipynb
