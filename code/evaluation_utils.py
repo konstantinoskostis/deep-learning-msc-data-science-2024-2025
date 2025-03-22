@@ -38,6 +38,7 @@ class Metrics(tf.keras.callbacks.Callback):
             self.model.predict(self.validation_data[0]), -1)
         val_targ = self.validation_data[1]
         val_targ = tf.cast(val_targ, dtype=tf.float32)
+
         # If val_targ is 1-hot
         if len(val_targ.shape) == 2 and val_targ.shape[1] != 1:
             val_targ = np.argmax(val_targ, -1)
@@ -55,37 +56,36 @@ class Metrics(tf.keras.callbacks.Callback):
 
         return
 
-
-class Metrics3D(tf.keras.callbacks.Callback):
+class CustomPOSMetrics(tf.keras.callbacks.Callback):
     def __init__(self, valid_data):
-        super(Metrics3D, self).__init__()
-        self.validation_data = valid_data
-
+        self.X_val = valid_data[0]
+        self.y_val = valid_data[1]
+    
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
-        predictions = self.model.predict(self.validation_data[0])
-        val_predict = np.argmax(predictions, axis=2)
-        val_targ = self.validation_data[1]
-        correct = []
-        predicted = []
 
-        for sequence_idx in range(val_targ.shape[0]):
-            for word_idx in range(val_targ.shape[1]):
-                if val_targ[sequence_idx][word_idx] != 0:
-                    correct.append(val_targ[sequence_idx][word_idx])
-                    predicted.append(val_predict[sequence_idx][word_idx])
+        y_pred = self.model.predict(self.X_val)
+        y_pred = np.argmax(y_pred, axis=-1)
+        y_true = np.argmax(self.y_val, axis=-1)
+        
+        y_pred_flat, y_true_flat = [], []
+        for pred_seq, true_seq in zip(y_pred, y_true):
+            for pred, true in zip(pred_seq, true_seq):
+                if true != 0:  # Exclude padding
+                    y_pred_flat.append(pred)
+                    y_true_flat.append(true)
 
-        _val_f1 = f1_score(correct, predicted, average="weighted")
-        _val_recall = recall_score(correct, predicted, average="weighted")
+        _val_f1 = f1_score(y_true_flat, y_pred_flat, average="weighted")
+        _val_recall = recall_score(y_true_flat, y_pred_flat, average="weighted")
         _val_precision = precision_score(
-            correct, predicted, average="weighted")
+            y_true_flat, y_pred_flat, average="weighted")
 
         logs['val_f1'] = _val_f1
         logs['val_recall'] = _val_recall
         logs['val_precision'] = _val_precision
+
         print(" — val_f1: %f — val_precision: %f — val_recall: %f" %
               (_val_f1, _val_precision, _val_recall))
-        return
 
 
 class EvaluationReport:

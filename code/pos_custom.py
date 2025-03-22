@@ -6,12 +6,11 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import (Dense, Dropout, Input, Embedding,
                                      Bidirectional, GRU, TimeDistributed)
-from tensorflow.keras.losses import sparse_categorical_crossentropy
 from tensorflow.keras.optimizers import Adam
 import keras_tuner as kt
 import matplotlib.pyplot as plt
 
-from evaluation_utils import (Metrics3D, EvaluationReport)
+from evaluation_utils import (CustomPOSMetrics, EvaluationReport)
 from constants import SEED
 
 # Set tensorflow random seed for reproducibility
@@ -30,10 +29,7 @@ class RNNPosTaggerTuner:
         self.n_stacked = n_stacked
         self.seed = seed
 
-        # +1 refers to class with id zero (0) which should correspond to masked
-        # (zeroed) input, for which we do not care.
-        self.num_classes = len(
-            self.data_processor.tag_tokenizer.word_index) + 1
+        self.num_classes = len(self.data_processor.idx2tag)
 
         train_X, train_y = data_processor.transform(train_sentences)
         sample_size = int(len(train_X) * train_size)
@@ -44,7 +40,6 @@ class RNNPosTaggerTuner:
         dev_X, dev_y = data_processor.transform(dev_sentences)
         self.dev_X = dev_X
         self.dev_y = dev_y
-        # self.dev_y = to_categorical(dev_y, num_classes=self.num_classes)
 
     def tune(self, max_trials=10, epochs=30, batch_size=128, patience=5):
         tuner = kt.RandomSearch(self.build_model,
@@ -68,11 +63,11 @@ class RNNPosTaggerTuner:
         model = Sequential()
 
         model.add(Input(shape=(self.data_processor.max_sequence_length,)))
-        model.add(Embedding(self.data_processor.vocabulary_size,
-                            self.embedding_dimensions,
-                            weights=[self.embedding_matrix],
-                            input_length=self.data_processor.max_sequence_length,
-                            mask_zero=True, trainable=False))
+        model.add(Embedding(self.embedding_matrix.shape[0],
+                                 self.embedding_dimensions,
+                                 weights=[self.embedding_matrix],
+                                 input_length=self.data_processor.max_sequence_length,
+                                 mask_zero=True, trainable=False))
 
         model.add(Dropout(hp.Float(name='dropout_layer_first',
                   min_value=0.1, max_value=0.5, step=0.05)))
@@ -100,9 +95,9 @@ class RNNPosTaggerTuner:
 
         hp_learning_rate = hp.Choice(
             'learning_rate', values=[1e-2, 1e-3, 1e-4])
-        model.compile(loss=sparse_categorical_crossentropy,
-                      optimizer=Adam(learning_rate=hp_learning_rate),
-                      metrics=['sparse_categorical_accuracy'])
+        model.compile(loss='categorical_crossentropy',
+                           optimizer=Adam(learning_rate=hp_learning_rate),
+                           metrics=['categorical_accuracy'])
 
         return model
 
@@ -116,8 +111,7 @@ class RNNPosTagger:
         self.embedding_matrix = embedding_matrix
         self.embedding_dimensions = embedding_matrix.shape[-1]
 
-        self.num_classes = len(
-            self.data_processor.tag_tokenizer.word_index) + 1
+        self.num_classes = len(self.data_processor.idx2tag)
 
         self.model = None
         self.history = None
@@ -145,13 +139,13 @@ class RNNPosTagger:
         self.history = self.model.fit(train_X, train_y,
                                       validation_data=(dev_X, dev_y),
                                       batch_size=batch_size, epochs=epochs, shuffle=True,
-                                      callbacks=[Metrics3D(valid_data=(dev_X, dev_y)),
+                                      callbacks=[CustomPOSMetrics(valid_data=(dev_X, dev_y)),
                                                  checkpoint, early_stopping])
 
     def classification_report(self, dataset):
         dataset_X, dataset_y = self.data_processor.transform(dataset)
         predictions_proba = self.model.predict(dataset_X)
-        predictions_2d = np.argmax(predictions_proba, axis=2)
+        predictions_2d = np.argmax(predictions_proba, axis=-1)
 
         y_true = []
         y_predicted = []
@@ -160,8 +154,9 @@ class RNNPosTagger:
         # consolidate for each word
         for sequence_idx in range(predictions_proba.shape[0]):
             for word_idx in range(predictions_proba.shape[1]):
-                if dataset_y[sequence_idx][word_idx] != 0:
-                    y_true.append(dataset_y[sequence_idx][word_idx])
+                # Check if the true label is not the padding token
+                if np.argmax(dataset_y[sequence_idx][word_idx]) != 0:  
+                    y_true.append(np.argmax(dataset_y[sequence_idx][word_idx]))
                     y_predicted.append(predictions_2d[sequence_idx][word_idx])
                     probabilities = predictions_proba[sequence_idx][word_idx]
                     y_probabilities.append(probabilities)
@@ -171,9 +166,10 @@ class RNNPosTagger:
         y_predicted = np.array(y_predicted)
         y_probabilities = np.array(y_probabilities)
 
-        class_ids = list(self.data_processor.tag_tokenizer.index_word.keys())
-        class_labels = list(
-            self.data_processor.tag_tokenizer.index_word.values())
+        tag_ids = list(self.data_processor.idx2tag.keys())
+        # reject the <PAD> (0) class
+        class_ids = [tag_id for tag_id in tag_ids if tag_id > 0]
+        class_labels = [self.data_processor.idx2tag[class_id] for class_id in class_ids]
 
         return EvaluationReport.classification_report(y_true, y_probabilities, y_predicted,
                                                       class_ids, class_labels)
@@ -182,19 +178,19 @@ class RNNPosTagger:
         fig, axs = plt.subplots(1, 2, figsize=(12, 6))
 
         # summarize history for accuracy
-        axs[0].plot(self.history.history['sparse_categorical_accuracy'])
-        axs[0].plot(self.history.history['val_sparse_categorical_accuracy'])
-        axs[0].set_title('Model Accuracy (Sparse Categorical Accuracy)')
+        axs[0].plot(self.history.history['categorical_accuracy'])
+        axs[0].plot(self.history.history['val_categorical_accuracy'])
+        axs[0].set_title('Model Accuracy (Categorical Accuracy)')
         axs[0].set_ylabel('accuracy')
         axs[0].set_xlabel('epoch')
         axs[0].legend(['train', 'dev'], loc='upper left')
         axs[0].set_xticks(
-            range(1, len(self.history.history['sparse_categorical_accuracy'])+1, 4))
+            range(1, len(self.history.history['categorical_accuracy'])+1, 4))
 
         # summarize history for loss
         axs[1].plot(self.history.history['loss'])
         axs[1].plot(self.history.history['val_loss'])
-        axs[1].set_title('Model Loss (Sparse Categorical Cross-Entropy)')
+        axs[1].set_title('Model Loss (Categorical Cross-Entropy)')
         axs[1].set_ylabel('loss')
         axs[1].set_xlabel('epoch')
         axs[1].legend(['train', 'dev'], loc='upper right')
@@ -210,7 +206,7 @@ class RNNPosTagger:
         self.model = Sequential()
 
         self.model.add(Input(shape=(self.data_processor.max_sequence_length,)))
-        self.model.add(Embedding(self.data_processor.vocabulary_size,
+        self.model.add(Embedding(self.embedding_matrix.shape[0],
                                  self.embedding_dimensions,
                                  weights=[self.embedding_matrix],
                                  input_length=self.data_processor.max_sequence_length,
@@ -236,8 +232,8 @@ class RNNPosTagger:
             Dense(self.num_classes, activation='softmax')))
 
         learning_rate = hyperparams.get('learning_rate')
-        self.model.compile(loss=sparse_categorical_crossentropy,
+        self.model.compile(loss='categorical_crossentropy',
                            optimizer=Adam(learning_rate=learning_rate),
-                           metrics=['sparse_categorical_accuracy'])
+                           metrics=['categorical_accuracy'])
 
         return

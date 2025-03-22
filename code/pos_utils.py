@@ -7,7 +7,7 @@ import pandas as pd
 
 from sklearn.preprocessing import LabelEncoder
 
-from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from transformers import BertTokenizer
 
@@ -112,88 +112,77 @@ class SentenceUtils:
                 for tag in tagList]
 
 
-class DataProcessor:
-    """ A data processor with a Scikit-Learn like interface.
+class DatasetProcessor:
+    """A data processor with a Scikit-Learn like interface.
 
-    The class is responsible for processing a dataset, by using a Tokenizer
-    on input texts, converting labels to ids (different Tokenizer) and
-    padding sequences appropriately (and is used in the custom architecture)
+    The class is responsible for processing a dataset. It persists a vocabulary
+    from the training set and accounts for PAD and UKN tokens along with a mapping
+    for tags/classes. Transformation includes encoding the input sequences and
+    padding them. The classes are being one-hot encoded.
+    (The class is used in the custom architecture)
     """
 
-    def __init__(self, vocabulary_size, max_sequence_length):
-        self.vocabulary_size = vocabulary_size
-        self.max_sequence_length = max_sequence_length
-        self.word_tokenizer = Tokenizer(
-            num_words=self.vocabulary_size, oov_token='__UNK__')
-        self.tag_tokenizer = Tokenizer()
+    def __init__(self):
+        self.word2idx = {}
+        self.idx2word = {}
+        self.tag2idx = {}
+        self.idx2tag = {}
+        self.max_sequence_length = None
 
     def fit(self, dataset):
-        X = SentenceUtils.texts(dataset)
-        Y = SentenceUtils.tags(dataset)
-
-        assert len(X) == len(Y)
-
-        for idx in range(0, len(X)):
-            assert len(X[idx]) == len(Y[idx])
-
-        self.word_tokenizer.fit_on_texts(X)
-        self.tag_tokenizer.fit_on_texts(Y)
-
-        return self
+        sentences = SentenceUtils.texts(dataset)
+        tags = SentenceUtils.tags(dataset)
+  
+        self.word2idx = {word: idx + 2 for idx, word in enumerate(set(word for sentence in sentences for word in sentence))}
+        self.word2idx["<PAD>"] = 0
+        self.word2idx["<UNK>"] = 1
+        self.idx2word = {idx: word for word, idx in self.word2idx.items()}
+        
+        self.tag2idx = {tag: idx + 1 for idx, tag in enumerate(set(tag for sentence_tags in tags for tag in sentence_tags))}
+        self.tag2idx["<PAD>"] = 0
+        self.idx2tag = {idx: tag for tag, idx in self.tag2idx.items()}
+    
+        self.max_sequence_length = max(len(sentence) for sentence in sentences)
 
     def transform(self, dataset):
-        """ Transform the given dataset
+        sentences = SentenceUtils.texts(dataset)
+        tags = SentenceUtils.tags(dataset)
+  
+        X = [[self.word2idx.get(word, self.word2idx["<UNK>"]) for word in sentence] for sentence in sentences]
+        X_padded = pad_sequences(X, maxlen=self.max_sequence_length, padding='post', value=self.word2idx["<PAD>"])
 
-        Encode and pad/truncate the input sequences (X)
-        Encode the labels (id assignment)
-        """
-
-        X = SentenceUtils.texts(dataset)
-        X_encoded = self.word_tokenizer.texts_to_sequences(X)
-
-        Y = SentenceUtils.tags(dataset)
-        Y_encoded = self.tag_tokenizer.texts_to_sequences(Y)
-
-        X_padded = pad_sequences(
-            X_encoded, maxlen=self.max_sequence_length, padding='post')
-        Y_padded = pad_sequences(
-            Y_encoded, maxlen=self.max_sequence_length, padding='post')
-
-        return (X_padded, Y_padded)
+        y = [[self.tag2idx[tag] for tag in sentence_tags] for sentence_tags in tags]
+        y_padded = pad_sequences(y, maxlen=self.max_sequence_length, padding='post', value=self.tag2idx["<PAD>"])
+        y_categorized = np.array([to_categorical(tag_seq, num_classes=len(self.tag2idx)) for tag_seq in y_padded])
+    
+        return (X_padded, y_categorized)
 
 
-class GensimEmbeddings:
-    def __init__(self, data_processor, vocabulary_size, model_name='glove-wiki-gigaword-100'):
-        self.data_processor = data_processor
-        self.vocabulary_size = vocabulary_size
-        self.embedding_model = api.load(model_name)
-        self.embedding_dimensions = None
-        self._embeddings_matrix = None
+class GloveEmbeddings:
+    """A class for loading and managing GloVe embeddings."""
 
-    def dimensions(self):
-        if self.embedding_dimensions is None:
-            self.embedding_dimensions = self.embedding_model.get_vector(
-                'happy').shape[0]
+    def __init__(self, word_index, model_name="glove-wiki-gigaword-100"):
+        self.glove_embeddings = api.load(model_name)
+        self.word_index = word_index
+        self.embedding_dim = self.glove_embeddings.vector_size
+        self.embedding_matrix = self.load_embeddings()
 
-        return self.embedding_dimensions
+    def load_embeddings(self):        
+        embedding_matrix = np.zeros((len(self.word_index), self.embedding_dim))
+        all_embeddings = []
 
-    def embeddings_matrix(self):
-        if self._embeddings_matrix is None:
-            embedding_matrix = np.zeros(
-                shape=(self.vocabulary_size, self.dimensions()))
-
-            for w2idx, _word in self.data_processor.word_tokenizer.index_word.items():
-                # Skip PAD / UNK tokens
-                if w2idx < 2:
-                    continue
-                try:
-                    embedding_matrix[w2idx] = self.embedding_model[_word]
-                except:
-                    pass
-
-            self._embeddings_matrix = embedding_matrix
-
-        return self._embeddings_matrix
+        for word, i in self.word_index.items():
+            if word in self.glove_embeddings:
+                embedding = self.glove_embeddings[word]
+                embedding_matrix[i] = embedding
+                all_embeddings.append(embedding)
+            elif word == "<UNK>":
+                continue
+        
+        if all_embeddings:
+            embedding_matrix[self.word_index["<UNK>"]] = np.mean(all_embeddings, axis=0)
+        
+        return embedding_matrix
 
 
 class PretrainedPosProcessor:
